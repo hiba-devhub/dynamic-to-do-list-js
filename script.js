@@ -3,13 +3,21 @@ document.addEventListener('DOMContentLoaded', function () {
   const taskInput = document.getElementById('task-input');
   const taskList = document.getElementById('task-list');
 
-  // Function to add task
-  function addTask() {
-    const taskText = taskInput.value.trim();
+  // Load tasks from Local Storage when page loads
+  function loadTasks() {
+    const storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+    storedTasks.forEach(taskText => addTask(taskText, false)); // 'false' indicates not to save again to Local Storage
+  }
 
-    if (taskText === "") {
-      alert("Please enter a task.");
-      return;
+  // Function to add task with optional save parameter
+  function addTask(taskText, save = true) {
+    // If called from input, get the text from input field
+    if (typeof taskText !== 'string') {
+      taskText = taskInput.value.trim();
+      if (taskText === "") {
+        alert("Please enter a task.");
+        return;
+      }
     }
 
     const li = document.createElement('li');
@@ -20,12 +28,35 @@ document.addEventListener('DOMContentLoaded', function () {
     removeBtn.className = 'remove-btn';
     removeBtn.onclick = function () {
       taskList.removeChild(li);
+      removeTaskFromStorage(taskText);
     };
 
     li.appendChild(removeBtn);
     taskList.appendChild(li);
-    taskInput.value = '';
+    
+    // Only clear input if this is a new task being added (not loaded from storage)
+    if (save) {
+      taskInput.value = '';
+      saveTaskToStorage(taskText);
+    }
   }
+
+  // Function to save task to Local Storage
+  function saveTaskToStorage(taskText) {
+    const storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+    storedTasks.push(taskText);
+    localStorage.setItem('tasks', JSON.stringify(storedTasks));
+  }
+
+  // Function to remove task from Local Storage
+  function removeTaskFromStorage(taskText) {
+    const storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+    const updatedTasks = storedTasks.filter(task => task !== taskText);
+    localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+  }
+
+  // Load existing tasks when page loads
+  loadTasks();
 
   // Add task on button click
   addButton.addEventListener('click', addTask);
